@@ -64,7 +64,17 @@ src/
 
 **Guards de rota:** `ProtectedRoute` redireciona não-autenticados para `/login`. Com prop `adminOnly`, redireciona não-admins para `/`. `GuestRoute` redireciona usuários autenticados para `/`.
 
-**`useApi` hook:** Para fetches simples em `useEffect`, use `useApi(() => api.method())`. Retorna `{ data, loading, error, refetch }`. Para fetches com dependências dinâmicas (ex: disponibilidade por data/auditório), faça manualmente com `useEffect` e flag `cancelled`, como em `NewBookingPage`.
+**`useApi` hook:** Use para todos os fetches. Retorna `{ data, loading, error, refetch }`. Para fetches condicionais (dependentes de valores que podem estar vazios), passe a opção `enabled`:
+
+```ts
+const { data, loading } = useApi(
+  () => bookingsApi.availability(locationId, date),
+  [locationId, date],
+  { enabled: !!locationId && !!date }
+)
+```
+
+Quando `enabled` é `false`, o hook retorna `data: null, loading: false` sem disparar request. Não use `useEffect` manual para fetches — prefira sempre `useApi`.
 
 **Formato de data:** Inputs HTML usam `YYYY-MM-DD`. A API espera `DD-MM-YYYY`. A conversão é feita pela função `toApiDate()` em `src/utils/dates.ts`. Sempre converter antes de enviar à API.
 
