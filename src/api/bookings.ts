@@ -27,7 +27,7 @@ export const bookingsApi = {
       .get<AvailabilitySlot[]>('/bookings/availability', {
         params: { locationId, date: toApiDate(date) },
       })
-      .then((r) => r.data),
+      .then((r) => Array.isArray(r.data) ? r.data : []),
 
   create: (payload: CreateBookingPayload) =>
     apiClient

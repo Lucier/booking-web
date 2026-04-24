@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
@@ -8,7 +8,6 @@ import type { CreateBookingFormData } from '@/schemas/booking.schema'
 import { bookingsApi } from '@/api/bookings'
 import { locationsApi } from '@/api/locations'
 import { useApi } from '@/hooks/useApi'
-import type { AvailabilitySlot } from '@/types'
 import { useToast } from '@/contexts/ToastContext'
 import { getApiErrorMessage } from '@/utils/errors'
 import { Card } from '@/components/ui/Card'
@@ -52,23 +51,11 @@ export function NewBookingPage() {
 
   const { data: locations, loading: loadingLoc } = useApi(() => locationsApi.list())
 
-  const [availability, setAvailability] = useState<AvailabilitySlot[] | null>(null)
-  const [loadingAvail, setLoadingAvail] = useState(false)
-
-  useEffect(() => {
-    if (!selectedLocationId || !selectedDate) {
-      setAvailability(null)
-      setLoadingAvail(false)
-      return
-    }
-    let cancelled = false
-    setAvailability(null)
-    setLoadingAvail(true)
-    bookingsApi.availability(selectedLocationId, selectedDate)
-      .then((result) => { if (!cancelled) { setAvailability(Array.isArray(result) ? result : []); setLoadingAvail(false) } })
-      .catch(() => { if (!cancelled) { setAvailability(null); setLoadingAvail(false) } })
-    return () => { cancelled = true }
-  }, [selectedLocationId, selectedDate])
+  const { data: availability, loading: loadingAvail } = useApi(
+    () => bookingsApi.availability(selectedLocationId, selectedDate),
+    [selectedLocationId, selectedDate],
+    { enabled: !!selectedLocationId && !!selectedDate }
+  )
 
   useEffect(() => {
     if (preselectedLocationId) {

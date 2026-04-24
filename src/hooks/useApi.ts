@@ -7,15 +7,25 @@ interface UseApiState<T> {
   refetch: () => void
 }
 
-export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = []): UseApiState<T> {
+export function useApi<T>(
+  fetcher: () => Promise<T>,
+  deps: unknown[] = [],
+  { enabled = true }: { enabled?: boolean } = {}
+): UseApiState<T> {
   const [data, setData] = useState<T | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(enabled)
   const [error, setError] = useState<string | null>(null)
   const [tick, setTick] = useState(0)
 
   const refetch = useCallback(() => setTick((t) => t + 1), [])
 
   useEffect(() => {
+    if (!enabled) {
+      setData(null)
+      setLoading(false)
+      setError(null)
+      return
+    }
     let cancelled = false
     setData(null)
     setLoading(true)
@@ -42,7 +52,7 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = []): UseA
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tick, ...deps])
+  }, [tick, enabled, ...deps])
 
   return { data, loading, error, refetch }
 }
